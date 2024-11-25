@@ -6,9 +6,9 @@ class Mentor:
         self.courses_attached = []
 
     def __str__(self):
-        return f"{self.name} {self.surname}"
+        return f"Имя: {self.name}\nФамилия: {self.surname}"
 
-
+    
 class Lecturer(Mentor):
     def __init__(self, name, surname):
         super().__init__(name, surname)
@@ -27,11 +27,18 @@ class Lecturer(Mentor):
         total_grades = sum(sum(grades) for grades in self.grades.values())
         count = sum(len(grades) for grades in self.grades.values())
         return total_grades / count if count else 0
+        all_grades = [grade for grades in self.grades.values() for grade in grades]
+        return round(sum(all_grades) / len(all_grades), 2) if all_grades else 0
 
     def __str__(self):
         average_grade = self.get_average_grade()
-        return f"{self.name} {self.surname}: {average_grade}"
+        return (f"Имя: {self.name}\nФамилия: {self.surname}\n"
+                f"Средняя оценка за лекции: {average_grade}")
 
+    def __lt__(self, other):
+        if not isinstance(other, Lecturer):
+            return NotImplemented
+        return self.get_average_grade() < other.get_average_grade()
 
 class Reviewer(Mentor):
     def rate_hw(self, student, course, grade):
@@ -52,10 +59,12 @@ class Student:
         self.name = name
         self.surname = surname
         self.courses_in_progress = []
+        self.finished_courses = []
         self.grades = {}
 
     def rate_lecture(self, lecturer, course, grade):
-        if isinstance(lecturer, Lecturer) and course in self.courses_in_progress and course in lecturer.courses_attached:
+        if isinstance(lecturer,
+                      Lecturer) and course in self.courses_in_progress and course in lecturer.courses_attached:
             if course in lecturer.grades:
                 lecturer.grades[course].append(grade)
             else:
@@ -63,14 +72,30 @@ class Student:
         else:
             print("Ошибка: Лектор не привязан к курсу или студент не изучает этот курс.")
 
+
     def get_average_grade(self):
         total_grades = sum(sum(grades) for grades in self.grades.values())
         count = sum(len(grades) for grades in self.grades.values())
         return total_grades / count if count else 0
 
+        all_grades = [grade for grades in self.grades.values()]
+        return round(sum(all_grades) / len(all_grades), 2) if all_grades else 0
+
+    def __lt__(self, other):
+        if not isinstance(other, Student):
+            return NotImplemented
+        return self.get_average_grade() < other.get_average_grade()
+
     def __str__(self):
         average_grade = self.get_average_grade()
-        return f"{self.name} {self.surname}: {average_grade}"
+        courses_in_progress = ", ".join(self.courses_in_progress)
+        finished_courses = ", ".join(self.finished_courses)
+        return (f"Имя: {self.name}\nФамилия: {self.surname}\n"
+                f"Средняя оценка за домашние задания: {average_grade}\n"
+                f"Курсы в процессе изучения: {courses_in_progress}\n"
+                f"Завершенные курсы: {finished_courses}")
+
+
 
 
 def average_student_grade(students, course):
